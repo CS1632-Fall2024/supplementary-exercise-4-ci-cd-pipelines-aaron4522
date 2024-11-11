@@ -11,10 +11,15 @@ import org.mockito.Mockito;
 
 import net.bytebuddy.asm.Advice.OffsetMapping.Factory.Illegal;
 
+
+import net.bytebuddy.asm.Advice.OffsetMapping.Factory.Illegal;
+
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+
+import java.lang.reflect.Method;
 
 import java.lang.reflect.Method;
 
@@ -37,6 +42,8 @@ public class RentACatUnitTest {
 	ByteArrayOutputStream out; // Output stream for testing system output
 	PrintStream stdout; // Print stream to hold the original stdout stream
 	String newline = System.lineSeparator(); // Platform independent newline ("\n" or "\r\n") for use in assertEquals
+
+	Method getCatMethod;
 
 	Method getCatMethod;
 
@@ -119,6 +126,16 @@ public class RentACatUnitTest {
 		}
 		
 		assertEquals("Invalid cat ID." + newline, out.toString());
+		
+
+		try {
+			getCatMethod.invoke(r, 2);
+		} catch (Exception e) {
+			assert false;
+			return;
+		}
+		
+		assertEquals("Invalid cat ID." + newline, out.toString());
 	}
 
 	/**
@@ -152,6 +169,20 @@ public class RentACatUnitTest {
 
 		assertNotNull(retVal);
 		assertEquals(2, retVal.getId());
+		r.addCat(c1);
+		r.addCat(c2);
+		r.addCat(c3);
+
+		Cat retVal; 
+		try {
+			retVal = (Cat)getCatMethod.invoke(r, 2);
+		} catch (Exception e) {
+			assert false;
+			return;
+		}
+
+		assertNotNull(retVal);
+		assertEquals(2, retVal.getId());
 	}
 
 	/**
@@ -165,6 +196,7 @@ public class RentACatUnitTest {
 	 */
 	@Test
 	public void testListCatsNumCats0() {
+		assertEquals("", r.listCats());
 		assertEquals("", r.listCats());
 	}
 
@@ -180,6 +212,11 @@ public class RentACatUnitTest {
 	 */
 	@Test
 	public void testListCatsNumCats3() {
+		r.addCat(c1);
+		r.addCat(c2);
+		r.addCat(c3);
+
+		assertEquals("ID 1. Jennyanydots\nID 2. Old Deuteronomy\nID 3. Mistoffelees\n", r.listCats());
 		r.addCat(c1);
 		r.addCat(c2);
 		r.addCat(c3);
@@ -207,6 +244,9 @@ public class RentACatUnitTest {
 		assertFalse(r.renameCat(2, "Garfield"));
 		assertNotEquals("Garfield", c2.getName());
 		assertEquals("Invalid cat ID." + newline, out.toString());
+		assertFalse(r.renameCat(2, "Garfield"));
+		assertNotEquals("Garfield", c2.getName());
+		assertEquals("Invalid cat ID." + newline, out.toString());
 	}
 
 	/**
@@ -225,6 +265,12 @@ public class RentACatUnitTest {
 	 */
 	@Test
 	public void testRenameNumCat3() {
+		r.addCat(c1);
+		r.addCat(c2);
+		r.addCat(c3);
+
+		assertTrue(r.renameCat(2, "Garfield"));
+		assertEquals("Garfield", c2.getName());
 		r.addCat(c1);
 		r.addCat(c2);
 		r.addCat(c3);
@@ -257,6 +303,13 @@ public class RentACatUnitTest {
 		assertTrue(r.rentCat(2));
 		assertTrue(c2.getRented());
 		assertEquals("Old Deuteronomy has been rented." + newline, out.toString());
+		r.addCat(c1);
+		r.addCat(c2);
+		r.addCat(c3);
+
+		assertTrue(r.rentCat(2));
+		assertTrue(c2.getRented());
+		assertEquals("Old Deuteronomy has been rented." + newline, out.toString());
 	}
 
 	/**
@@ -277,6 +330,15 @@ public class RentACatUnitTest {
 	 */
 	@Test
 	public void testRentCatFailureNumCats3() {
+		r.addCat(c1);
+		r.addCat(c2);
+		r.addCat(c3);
+
+		r.rentCat(2);
+		out.reset();
+
+		assertFalse(r.rentCat(2));
+		assertEquals("Sorry, Old Deuteronomy is not here!" + newline, out.toString());
 		r.addCat(c1);
 		r.addCat(c2);
 		r.addCat(c3);
@@ -316,6 +378,16 @@ public class RentACatUnitTest {
 		assertTrue(r.returnCat(2));
 		assertFalse(c2.getRented());
 		assertEquals("Welcome back, Old Deuteronomy!" + newline, out.toString());
+		r.addCat(c1);
+		r.addCat(c2);
+		r.addCat(c3);
+
+		r.rentCat(2);
+		out.reset();
+
+		assertTrue(r.returnCat(2));
+		assertFalse(c2.getRented());
+		assertEquals("Welcome back, Old Deuteronomy!" + newline, out.toString());
 	}
 
 	/**
@@ -335,6 +407,12 @@ public class RentACatUnitTest {
 	 */
 	@Test
 	public void testReturnFailureCatNumCats3() {
+		r.addCat(c1);
+		r.addCat(c2);
+		r.addCat(c3);
+
+		assertFalse(r.returnCat(2));
+		assertEquals("Old Deuteronomy is already here!" + newline, out.toString());
 		r.addCat(c1);
 		r.addCat(c2);
 		r.addCat(c3);
